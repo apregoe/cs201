@@ -5,6 +5,7 @@ import java.awt.Graphics;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.Stack;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -14,6 +15,14 @@ public class FactoryNode extends FactoryObject {
 	//Each node can own a FactoryObject, doing so will render it in its place
 	private FactoryObject mFObject;
 	
+	private int path;
+	
+	public synchronized void mark(){
+		++path;
+	}
+	public synchronized void unMark(){
+		--path;
+	}
 	//This lock is used to lock the node or the object within the node
 	private Lock nodeLock;
 	
@@ -36,12 +45,28 @@ public class FactoryNode extends FactoryObject {
 		this.y = y;
 	}
 
+	private static final Color[] pathColors = {
+		new Color(0,0,255),new Color(0,128,255),new Color(0,255,255),
+		new Color(0,255,128),new Color(0,255,0),new Color(128,255,0),
+		new Color(255,255,0),new Color(255,128,0),new Color(255,0,0)
+	};
+	
 	@Override
 	public void draw(Graphics g, Point mouseLocation) {
 		g.setColor(Color.BLACK);
 		if(mFObject == null) {
 			g.setColor(Color.WHITE); //draw a border, makes it look like a tiled grid in the factory
 			g.drawRect(renderBounds.x, renderBounds.y, renderBounds.width, renderBounds.height);
+			if(path > 0){
+				int colorCode = path -1;
+				if(colorCode >= pathColors.length){
+					colorCode = pathColors.length - 1;
+				}
+				g.setColor(pathColors[colorCode]);
+				g.fillOval(renderBounds.x + renderBounds.width/4,
+						renderBounds.y + renderBounds.height/4,
+						renderBounds.width/2, renderBounds.height/2);
+			}
 		} else {
 			mFObject.draw(g, mouseLocation);
 		}
@@ -136,7 +161,15 @@ public class FactoryNode extends FactoryObject {
 		
 		while(!openList.isEmpty()) {
 			PathNode current = lowestFScore(openList);
-			if(current.fNode == mDestinationNode) return makePath(start, current);
+			if(current.fNode == mDestinationNode){
+				Stack<FactoryNode> path = makePath(start, current);
+				Iterator<FactoryNode> iter = path.iterator();
+				while(iter.hasNext()){
+					iter.next().mark();
+				}
+				return path;
+				
+			}
 			openList.remove(current);
 			closedList.add(current);
 			for(FactoryNode neighbor : current.fNode.mNeighbors) {

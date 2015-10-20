@@ -8,4 +8,8 @@ public class FactoryWall extends FactoryObject {
 		super(inDimensions);
 		mImage = ImageLibrary.getImage("resources/img/Wall.jpeg");
 	}
+	public FactoryWall(Rectangle inDimensions, String file){
+		super(inDimensions);
+		mImage = ImageLibrary.getImage(file);
+	}
 }

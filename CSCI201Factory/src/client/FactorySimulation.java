@@ -2,10 +2,18 @@ package client;
 
 import java.awt.Point;
 import java.awt.Rectangle;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.sql.Timestamp;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Scanner;
 
+import javax.swing.JOptionPane;
 import javax.swing.JTable;
 
 import resource.Factory;
@@ -14,7 +22,7 @@ import resource.Resource;
 public class FactorySimulation {
 	
 	Factory mFactory;
-	
+	private double totalTime;
 	private ArrayList<FactoryObject> mFObjects;
 	private ArrayList<FactoryWorker> mFWorkers;
 	private FactoryNode mFNodes[][];
@@ -29,9 +37,11 @@ public class FactorySimulation {
 	}
 	
 	FactorySimulation(Factory inFactory, JTable inTable) {
+		totalTime = 0.0;
 		mFactory = inFactory;
 		mFNodes = new FactoryNode[mFactory.getWidth()][mFactory.getHeight()];
-		
+		System.out.println(inFactory.getWidth() +"   " +inFactory.getHeight());
+
 		//Create the nodes of the factory
 		for(int height = 0; height < mFactory.getHeight(); height++) {
 			for(int width = 0; width < mFactory.getWidth(); width++) {
@@ -39,9 +49,30 @@ public class FactorySimulation {
 				mFObjects.add(mFNodes[width][height]);
 			}
 		}
-		
+		//reading walls
+		Scanner reader = null;
+		try {
+			reader = new Scanner(new File("walls"));
+			while(reader.hasNext()){
+				int x = reader.nextInt();
+				int y = reader.nextInt();
+				String file = reader.next();
+				FactoryWall fw = new FactoryWall(new Rectangle(x,y,1,1), file);
+				mFObjects.add(fw);
+				System.out.println(file+ '\n'+fw.getX() +"   " +fw.getY());
+				mFNodes[fw.getX()][fw.getY()].setObject(fw);
+			}
+		} catch (FileNotFoundException fnfe) {
+			// TODO Auto-generated catch block
+			System.out.println("Error: reading file in FileSimulation constructor \n" + fnfe.getMessage());
+			fnfe.printStackTrace();
+		} finally{
+			if(reader != null){
+				reader.close();
+			}
+		}
 		//Create the Walls of the factory
-		for(int i = 0; i < 10; ++i){
+		/*for(int i = 0; i < 10; ++i){
 			FactoryWall factoryWall = new FactoryWall(new Rectangle(7,i,1,1));
 			mFObjects.add(factoryWall);
 			mFNodes[factoryWall.getX()][factoryWall.getY()].setObject(factoryWall);	
@@ -51,7 +82,7 @@ public class FactorySimulation {
 			FactoryWall factoryWall = new FactoryWall(new Rectangle(i,9,1,1));
 			mFObjects.add(factoryWall);
 			mFNodes[factoryWall.getX()][factoryWall.getY()].setObject(factoryWall);	
-		}
+		}*/
 		
 		
 		//Link all of the nodes together
@@ -92,6 +123,7 @@ public class FactorySimulation {
 	}
 	
 	public void update(double deltaTime) {
+		totalTime += deltaTime;
 		if(isDone){return;}
 		//Update all the objects in the factor that need updating each tick
 		for(FactoryObject object : mFWorkers){
@@ -99,9 +131,38 @@ public class FactorySimulation {
 		}
 		if(mTaskBoard.isDone()){
 			isDone = true;
-			for(FactoryObject object : mFObjects){
-				if(object instanceof FactoryReporter){
-					((FactoryReporter) object).report();
+			Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+			String outFileName = "reports/"+timestamp;
+			outFileName = outFileName.replace("[-:. ]", "_");
+			FileWriter fw = null;
+			File file = null;
+			try{
+				file = new File(outFileName);
+				fw = new FileWriter(outFileName, true);
+				file.createNewFile();
+				for(FactoryObject object : mFObjects){
+					if(object instanceof FactoryReporter){
+						((FactoryReporter) object).report(fw);
+					}
+				}
+				DecimalFormat threeDecimals = new DecimalFormat(".###");
+				JOptionPane.showMessageDialog(null, "Total time: " + threeDecimals.format(totalTime) + "s",
+													"Simulation over!",
+													JOptionPane.INFORMATION_MESSAGE);
+			}catch(IOException ioe){
+				System.out.println("IOExcept on FactorySimulation.update()\n" + ioe.getMessage() +"\n");
+				ioe.printStackTrace();
+				if(file != null){
+					file.delete();
+				}
+			} finally{
+				if(fw != null){
+					try{
+						fw.close();
+					}catch(IOException ioe){
+						System.out.println("Error: filed to close FileWriter in FactorySimulation.update() \n" + ioe.getMessage());
+						ioe.printStackTrace();
+					}
 				}
 			}
 		}

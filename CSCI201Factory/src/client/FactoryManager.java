@@ -27,6 +27,10 @@ public class FactoryManager implements Runnable , ChangeListener{
 	//Speed of the simulation, 1x is normal time
 	private double speed = Constants.simulation_1x;
 	
+	//
+	private Factory mFactory;
+	private JTable mTable;
+	
 	//instance constructor
 	{
 		animationLock = new ReentrantLock();
@@ -34,11 +38,18 @@ public class FactoryManager implements Runnable , ChangeListener{
 	}
 	
 	public void loadFactory(Factory inFactory, JTable inTable) {
+		mFactory = inFactory;
+		mTable = inTable;
+		
 		//must stop the current animation, load in the factory, and start the new factorySimulation
 		stop();
 		mFactorySimulation = new FactorySimulation(inFactory, inTable);
 		mRenderPanel.refresh();
 		start();
+	}
+	
+	public void reset(){
+		loadFactory(mFactory, mTable);
 	}
 	
 	public void setFactoryRenderer(FactoryPanel inRenderPanel) {

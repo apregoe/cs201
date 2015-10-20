@@ -1,21 +1,168 @@
 package client;
 
 import java.awt.BorderLayout;
+import java.awt.Frame;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.awt.event.WindowStateListener;
 import java.net.Socket;
+import java.util.Dictionary;
+import java.util.Hashtable;
 
 import javax.swing.Box;
+import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSlider;
+import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.JTextArea;
+import javax.swing.border.TitledBorder;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
 import javax.swing.table.TableRowSorter;
 
 public class FactoryClientGUI extends JFrame {
+	class FactoryController extends JFrame implements ChangeListener, WindowStateListener{
+		private static final long serialVersionUID = 1;
+		private JTabbedPane tabbedPane;
+		// member variables
+		private JButton pauseButton;
+		private JButton continueButton;
+		private JButton resetButton;
+		
+		private int speed = Constants.simulation_1x;
+		private int windowSaveSpeed;
+		public FactoryController(){
+			super("Factory Controller");
+			setSize(320, 240);
+			
+			add(simulationSpeedController);
+			setVisible(false);
+			setLocationRelativeTo(null);
+			
+			Dictionary<Integer, JLabel> labelTable = new Hashtable<Integer, JLabel>();
+			labelTable.put(Constants.simulation_0x, new JLabel("Paused"));
+			labelTable.put(Constants.simulation_1x, new JLabel("Normal"));
+			labelTable.put(Constants.simulation_2x, new JLabel("Double"));
+			labelTable.put(Constants.simulation_3x, new JLabel("Triple"));
+			simulationSpeedController.setLabelTable(labelTable);
+			simulationSpeedController.setPaintLabels(true);
+			simulationSpeedController.setBorder(new TitledBorder("Speed Controller"));
+			
+			tabbedPane = new JTabbedPane();
+			createTimePane1();
+			createOtherPane1();
+			
+			addEvents();
+			add(tabbedPane);
+		}
+
+		private void createTimePane1() {
+			JPanel timePanel = new JPanel();
+			timePanel.setLayout(new BorderLayout());
+			
+			JPanel buttonBox = new JPanel();
+			buttonBox.setLayout(new GridBagLayout());
+			GridBagConstraints gbc = new GridBagConstraints();
+			gbc.fill = GridBagConstraints.HORIZONTAL;
+			gbc.weighty = 1;
+			
+			pauseButton = new JButton("Pause");
+			gbc.gridy = 1;
+			buttonBox.add(pauseButton, gbc);
+			
+			continueButton = new JButton("Continue");
+			gbc.gridy = 2;
+			buttonBox.add(continueButton, gbc);
+			continueButton.setEnabled(false);
+			
+			resetButton = new JButton("Reset");
+			gbc.gridy = 3;
+			buttonBox.add(resetButton, gbc);
+			add(buttonBox);
+			
+			timePanel.add(buttonBox);
+			timePanel.add(simulationSpeedController, BorderLayout.SOUTH);
+			tabbedPane.add("time", timePanel);		
+		}
+
+		private void createOtherPane1() {
+			JPanel otherPanel = new JPanel();
+			tabbedPane.add("Other", otherPanel);
+		}
+		
+		private void addEvents(){
+			pauseButton.addActionListener(new ActionListener(){
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					continueButton.setEnabled(true);
+					pauseButton.setEnabled(false);
+					speed = simulationSpeedController.getValue();
+					simulationSpeedController.setValue(Constants.simulation_0x);
+				}
+				
+			});
+			continueButton.addActionListener(new ActionListener(){
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					continueButton.setEnabled(false);
+					pauseButton.setEnabled(true);
+					simulationSpeedController.setValue(speed);
+				}
+				
+			});
+			resetButton.addActionListener(new ActionListener(){
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					continueButton.setEnabled(false);
+					pauseButton.setEnabled(true);
+					speed = Constants.simulation_1x;
+					simulationSpeedController.setValue(Constants.simulation_1x);
+					factoryManager.reset();
+				}
+				
+			});
+		}
+
+		@Override
+		public void stateChanged(ChangeEvent ce) {
+			// TODO Auto-generated method stub
+			int state = ((JSlider)ce.getSource()).getValue();
+			if(state == Constants.simulation_0x){
+				continueButton.setEnabled(true);
+				pauseButton.setEnabled(false);
+			}else{
+				continueButton.setEnabled(false);
+				pauseButton.setEnabled(true);
+			}
+		}
+
+		@Override
+		public void windowStateChanged(WindowEvent we) {
+			// TODO Auto-generated method stub
+			int state = we.getNewState();
+			if((state & Frame.ICONIFIED) == Frame.ICONIFIED){
+				setVisible(false);
+				windowSaveSpeed = simulationSpeedController.getValue();
+				simulationSpeedController.setValue(Constants.simulation_0x);
+			}else{
+				simulationSpeedController.setValue(windowSaveSpeed);
+			}
+		}
+	}
+	
+	private FactoryController factoryController;
 	
 	public static final long serialVersionUID = 1;
 	
@@ -58,6 +205,25 @@ public class FactoryClientGUI extends JFrame {
 		simulationSpeedController.setMajorTickSpacing(1);
 		simulationSpeedController.setMinorTickSpacing(1);
 		simulationSpeedController.setPaintTicks(true);
+		
+		factoryController = new FactoryController();
+		
+		//
+		super.addWindowStateListener(factoryController);
+		simulationSpeedController.addChangeListener(factoryController);
+		
+	}
+	private void createMenu(){
+		JMenuBar menu = new JMenuBar();
+		JMenuItem controller = new JMenuItem("Controller");
+		controller.addActionListener(new ActionListener(){
+			@Override
+			public void actionPerformed(ActionEvent arg0){
+				factoryController.setVisible(true);
+			}
+		});
+		menu.add(controller);
+		setJMenuBar(menu);
 	}
 	
 	private void createGUI() {
@@ -67,11 +233,12 @@ public class FactoryClientGUI extends JFrame {
 		
 		Box bottomBox = Box.createHorizontalBox();
 		bottomBox.add(messageTextAreaScrollPane);
-		bottomBox.add(simulationSpeedController);
+		bottomBox.add(new FactoryProgressPanel(productTable));
 		
 		add(factoryPanel,BorderLayout.CENTER);
 		add(bottomBox, BorderLayout.SOUTH);
 		add(tableScrollPane,BorderLayout.EAST);
+		createMenu();
 	}
 	
 	public JTable getTable() {

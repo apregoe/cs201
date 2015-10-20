@@ -4,6 +4,8 @@ import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Point;
 import java.awt.Rectangle;
+import java.io.FileWriter;
+import java.io.IOException;
 
 import libraries.ImageLibrary;
 import resource.Resource;
@@ -42,8 +44,8 @@ public class FactoryResource extends FactoryObject implements FactoryReporter{
 	}
 	
 	@Override
-	public void report(){
-		System.out.println("Total Resources: " + mResource.getQuantity() + "/" + startAmount
-							+ "Taken: " + (startAmount - mResource.getQuantity()));
+	public void report(FileWriter fw) throws IOException{
+		fw.write("Total Resources: " + mResource.getQuantity() + "/" + startAmount
+							+ "Taken: " + (startAmount - mResource.getQuantity()) + '\n');
 	}
 }

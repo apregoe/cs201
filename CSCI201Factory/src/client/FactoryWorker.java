@@ -4,6 +4,8 @@ import java.awt.Graphics;
 import java.sql.Timestamp;
 import java.awt.Point;
 import java.awt.Rectangle;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.Stack;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
@@ -15,8 +17,8 @@ import libraries.ImageLibrary;
 
 public class FactoryWorker extends FactoryObject implements Runnable, FactoryReporter{
 	@Override
-	public void report(){
-		System.out.println(mNumber + "finished at " + finished);
+	public void report(FileWriter fw) throws IOException{
+		fw.write(mNumber + "finished at " + finished + '\n');
 	}
 	private int mNumber;
 	private Timestamp finished;
@@ -65,8 +67,12 @@ public class FactoryWorker extends FactoryObject implements Runnable, FactoryRep
 				if(!mShortestPath.isEmpty()) {
 					//if we have somewhere else to go, save that location
 					mNextNode = mShortestPath.pop();
+					mCurrentNode.unMark();
 				}//if we arrived at the location, signal the worker thread so they can do more actions
-				if(mCurrentNode == mDestinationNode) atLocation.signal();
+				if(mCurrentNode == mDestinationNode){
+					mDestinationNode.unMark();
+					atLocation.signal();
+				}
 			}
 		}
 		mLock.unlock();

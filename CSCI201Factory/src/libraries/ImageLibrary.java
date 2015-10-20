@@ -3,6 +3,7 @@ package libraries;
 import java.awt.Image;
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -23,7 +24,13 @@ public class ImageLibrary {
 	public static Image getImage(String directory) {
 		Image img = imageMap.get(directory);
 		if(img == null) {
-			try { img = ImageIO.read(new File(directory)); }
+			try {
+				if(directory.startsWith("http")){
+					img = ImageIO.read(new URL(directory));
+				}else{
+					img = ImageIO.read(new File(directory));
+				}
+			}
 			catch (IOException e) { System.out.println("Error reading image: " + e); return null; }
 			imageMap.put(directory, img);
 		}
