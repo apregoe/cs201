@@ -7,6 +7,7 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 
 import resource.Factory;
+import resource.Resource;
 import utilities.Util;
 
 public class ServerClientCommunicator extends Thread {
@@ -31,7 +32,7 @@ public class ServerClientCommunicator extends Thread {
 			Util.printExceptionToCommand(ioe);
 		}
 	}
-	
+	//reading a message
 	public void run() {
 		try {
 			String line = br.readLine();
@@ -50,4 +51,33 @@ public class ServerClientCommunicator extends Thread {
 			}
 		}
 	}
+
+	public void sendResource(Resource resource) {
+		try{
+			oos.writeObject(resource);
+			oos.flush();
+		} catch (IOException e) {
+			Util.printExceptionToCommand(e);
+			e.printStackTrace();
+		}
+	}
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

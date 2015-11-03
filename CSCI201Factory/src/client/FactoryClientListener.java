@@ -4,8 +4,10 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.Vector;
 
 import resource.Factory;
+import resource.Resource;
 import utilities.Util;
 
 public class FactoryClientListener extends Thread {
@@ -44,15 +46,37 @@ public class FactoryClientListener extends Thread {
 	}
 	
 	public void run() {
+
 		try {
 			mFClientGUI.addMessage(Constants.waitingForFactoryConfigMessage);
 			Factory factory;
 			while(true) {
 				// in case the server sends another factory to us
-				factory = (Factory)ois.readObject();
-				mFManager.loadFactory(factory, mFClientGUI.getTable());
-				mFClientGUI.addMessage(Constants.factoryReceived);
-				mFClientGUI.addMessage(factory.toString());
+				Object obj = ois.readObject();
+				if(obj instanceof Factory){
+					factory = (Factory)obj;
+					mFManager.loadFactory(factory, mFClientGUI.getTable());
+					mFClientGUI.addMessage(Constants.factoryReceived);
+					mFClientGUI.addMessage(factory.toString());
+
+					//get min resource
+					Resource minResource = null;
+					int amount = Integer.MAX_VALUE;
+					Vector<Resource> allR = mFManager.mFactory.getResources();
+					for(Resource r : allR){
+						if(amount > r.getQuantity()){
+							minResource = r;
+							amount = r.getQuantity();
+						}
+					}
+					sendMessage(minResource.getName());
+
+				}else if(obj instanceof Resource){
+					Resource toDeliver = (Resource)obj;
+					mFManager.deliver(toDeliver);
+					mFClientGUI.addMessage(Constants.factoryReceived);
+					mFClientGUI.addMessage(toDeliver.toString());
+				}
 			}
 		} catch (IOException ioe) {
 			mFClientGUI.addMessage(Constants.serverCommunicationFailed);

@@ -20,20 +20,20 @@ public class FactoryWorker extends FactoryObject implements Runnable, FactoryRep
 	public void report(FileWriter fw) throws IOException{
 		fw.write(mNumber + "finished at " + finished + '\n');
 	}
-	private int mNumber;
-	private Timestamp finished;
+	protected int mNumber;
+	protected Timestamp finished;
 	
-	private FactorySimulation mFactorySimulation;
-	private Product mProductToMake;
+	protected FactorySimulation mFactorySimulation;
+	protected Product mProductToMake;
 	
-	private Lock mLock;
-	private Condition atLocation;
+	protected Lock mLock;
+	protected Condition atLocation;
 	
 	//Nodes each worker keeps track of for path finding
-	private FactoryNode mCurrentNode;
-	private FactoryNode mNextNode;
-	private FactoryNode mDestinationNode;
-	private Stack<FactoryNode> mShortestPath;
+	protected FactoryNode mCurrentNode;
+	protected FactoryNode mNextNode;
+	protected FactoryNode mDestinationNode;
+	protected Stack<FactoryNode> mShortestPath;
 	
 	//instance constructor
 	{

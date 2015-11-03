@@ -9,6 +9,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import resource.Factory;
+import resource.Resource;
 
 public class FactoryManager implements Runnable , ChangeListener{
 
@@ -28,7 +29,7 @@ public class FactoryManager implements Runnable , ChangeListener{
 	private double speed = Constants.simulation_1x;
 	
 	//
-	private Factory mFactory;
+	public Factory mFactory;
 	private JTable mTable;
 	
 	//instance constructor
@@ -80,6 +81,7 @@ public class FactoryManager implements Runnable , ChangeListener{
 		long beforeTime = 0, deltaTime = 0, sleepTime = 0;
 		beforeTime = System.nanoTime();
 		running = true;
+
 		while(running) {
 			//if we have a simulation to run, run the simulation
 			if(mFactorySimulation != null) {
@@ -112,5 +114,24 @@ public class FactoryManager implements Runnable , ChangeListener{
 		JSlider source = (JSlider) ce.getSource();
 		speed = source.getValue();
 	}
-	
+
+	public void deliver(Resource toDeliver) {
+		if(mFactorySimulation != null){
+			if(mFactorySimulation.getmMailbox() != null){
+				mFactorySimulation.getmMailbox().insert(toDeliver);
+			}
+		}
+	}
 }
+
+
+
+
+
+
+
+
+
+
+
+

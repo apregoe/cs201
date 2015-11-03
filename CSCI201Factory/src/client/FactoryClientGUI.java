@@ -1,5 +1,7 @@
 package client;
 
+import resource.Resource;
+
 import java.awt.BorderLayout;
 import java.awt.Frame;
 import java.awt.GridBagConstraints;
@@ -12,6 +14,7 @@ import java.awt.event.WindowStateListener;
 import java.net.Socket;
 import java.util.Dictionary;
 import java.util.Hashtable;
+import java.util.Vector;
 
 import javax.swing.Box;
 import javax.swing.JButton;
@@ -174,13 +177,14 @@ public class FactoryClientGUI extends JFrame {
 	private DefaultTableModel productTableModel;
 	private JScrollPane tableScrollPane;
 	private JSlider simulationSpeedController;
+	private FactoryClientListener fl = null;
 	
 	FactoryClientGUI(Socket socket){
 		super(Constants.factoryGUITitleString);
 		factoryManager = new FactoryManager();
 		initializeVariables();
 		createGUI();
-		new FactoryClientListener(factoryManager, this, socket);
+		fl = new FactoryClientListener(factoryManager, this, socket);
 		addActionAdapters();
 		setLocationRelativeTo(null);
 		setVisible(true);

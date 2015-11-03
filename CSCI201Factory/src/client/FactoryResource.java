@@ -42,7 +42,11 @@ public class FactoryResource extends FactoryObject implements FactoryReporter{
 	public String getName() {
 		return mResource.getName();
 	}
-	
+
+	public void giveResource(int amount){
+		takeResource(-amount);
+	}
+
 	@Override
 	public void report(FileWriter fw) throws IOException{
 		fw.write("Total Resources: " + mResource.getQuantity() + "/" + startAmount

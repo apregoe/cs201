@@ -8,10 +8,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.sql.Timestamp;
 import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Scanner;
+import java.util.*;
 
 import javax.swing.JOptionPane;
 import javax.swing.JTable;
@@ -28,7 +25,9 @@ public class FactorySimulation {
 	private FactoryNode mFNodes[][];
 	private Map<String, FactoryNode> mFNodeMap;
 	private FactoryTaskBoard mTaskBoard;
+	private FactoryMailbox mMailbox;
 	private boolean isDone = false;
+
 	//instance constructor
 	{
 		mFObjects = new ArrayList<FactoryObject>();
@@ -48,6 +47,19 @@ public class FactorySimulation {
 				mFNodes[width][height] = new FactoryNode(width,height);
 				mFObjects.add(mFNodes[width][height]);
 			}
+		}
+
+		//creating mailbox
+		mMailbox = new FactoryMailbox(mFactory.getResources());//Mailbox that can store factory resources
+		mFObjects.add(mMailbox);//Add this object to the renderer
+		mFNodes[0][0].setObject(mMailbox);//Link this object to Node 0,0
+		mFNodeMap.put("Mailbox", mFNodes[0][0]);//Make it easy to find the Mailbox node
+
+		//creating stockpersons
+		for(int i = 0; i < 3; ++i){
+			FactoryStockPersons sp = new FactoryStockPersons(i, mFNodes[0][0],this);
+			mFObjects.add(sp);
+			mFWorkers.add(sp);
 		}
 		//reading walls
 		Scanner reader = null;
@@ -71,19 +83,6 @@ public class FactorySimulation {
 				reader.close();
 			}
 		}
-		//Create the Walls of the factory
-		/*for(int i = 0; i < 10; ++i){
-			FactoryWall factoryWall = new FactoryWall(new Rectangle(7,i,1,1));
-			mFObjects.add(factoryWall);
-			mFNodes[factoryWall.getX()][factoryWall.getY()].setObject(factoryWall);	
-		}
-		
-		for(int i = 0; i < 6; ++i){
-			FactoryWall factoryWall = new FactoryWall(new Rectangle(i,9,1,1));
-			mFObjects.add(factoryWall);
-			mFNodes[factoryWall.getX()][factoryWall.getY()].setObject(factoryWall);	
-		}*/
-		
 		
 		//Link all of the nodes together
 		for(FactoryNode[] nodes: mFNodes) {
@@ -121,7 +120,8 @@ public class FactorySimulation {
 			mFWorkers.add(fw);
 		}
 	}
-	
+
+
 	public void update(double deltaTime) {
 		totalTime += deltaTime;
 		if(isDone){return;}
@@ -129,6 +129,8 @@ public class FactorySimulation {
 		for(FactoryObject object : mFWorkers){
 			object.update(deltaTime);
 		}
+
+
 		if(mTaskBoard.isDone()){
 			isDone = true;
 			Timestamp timestamp = new Timestamp(System.currentTimeMillis());
@@ -167,7 +169,11 @@ public class FactorySimulation {
 			}
 		}
 	}
-	
+
+	public FactoryMailbox getmMailbox(){
+		return mMailbox;
+	}
+
 	public ArrayList<FactoryObject> getObjects() {
 		return mFObjects;
 	}
